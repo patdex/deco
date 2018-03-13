@@ -124,22 +124,21 @@ class Trace:
         """
         def wrapper(*args, **kwargs):
 
+            if self.disabled or disable_tracing:
+                return func
+
             inner_func = _get_wrapped_method(func)
-            ind = int()
 
-            if not self.disabled and not disable_tracing:
-                ind = self._increment_indent()  # indent log message
-                all_as_kwargs = _collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
-                self.log_method(indent_str(ind) + self._call_message(inner_func, all_as_kwargs))
-
+            ind = self._increment_indent()  # indent log message
+            all_as_kwargs = _collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
+            self.log_method(indent_str(ind) + self._call_message(inner_func, all_as_kwargs))
             start_time = time.time()
+
             ret = func(*args, **kwargs)  # run decorated method
+
             exec_time = time.time() - start_time
-
-            if not self.disabled and not disable_tracing:
-                self.log_method(indent_str(ind, True) + self._return_message(inner_func, ret, exec_time))
-                self._decrement_indent()  # redo indent log message
-
+            self.log_method(indent_str(ind, True) + self._return_message(inner_func, ret, exec_time))
+            self._decrement_indent()  # redo indent log message
             return ret
 
         _wrap(wrapper, func)
