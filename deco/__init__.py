@@ -13,6 +13,12 @@ _log_indent = dict()
 
 
 def indent_str(cnt, end=False):
+    """
+    indent string
+    :param cnt: indentation count
+    :param end: close actual indentation?
+    :return: 
+    """
 
     if not indent:
         return ''
@@ -48,7 +54,9 @@ def _get_wrapped_method(func):
     :param func: 
     :return: 
     """
-    return getattr(func, '__wrapped__') if hasattr(func, '__wrapped__') else func
+    while hasattr(func, '__wrapped__'):
+        func = getattr(func, '__wrapped__')
+    return func
 
 
 def _wrap(wrapper, func):
@@ -60,7 +68,7 @@ def _wrap(wrapper, func):
     setattr(wrapper, '__wrapped__', func)
 
 
-def _argument_types(func):
+def argument_types(func):
     """
     :param func: 
     :return: dictionary with argument name and type 
@@ -78,7 +86,7 @@ def _argument_types(func):
     return types
 
 
-def _collect_all_arguments_to_dict(func, args, kwargs):
+def collect_all_arguments_to_dict(func, args, kwargs):
     """
     :param func: 
     :param args: 
@@ -130,7 +138,7 @@ class Trace:
             inner_func = _get_wrapped_method(func)
 
             ind = self._increment_indent()  # indent log message
-            all_as_kwargs = _collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
+            all_as_kwargs = collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
             self.log_method(indent_str(ind) + self._call_message(inner_func, all_as_kwargs))
             start_time = time.time()
 
@@ -198,8 +206,8 @@ def cast_std_arguments(func):
         inner_func = _get_wrapped_method(func)
 
         all_as_kwargs_casted = collections.OrderedDict()
-        all_as_kwargs = _collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
-        arg_types = _argument_types(inner_func)
+        all_as_kwargs = collect_all_arguments_to_dict(inner_func, args, kwargs)  # all arguments to OrderedDict
+        arg_types = argument_types(inner_func)
 
         for arg_name, arg_value in all_as_kwargs.items():
             arg_type = arg_types.get(arg_name, None)
